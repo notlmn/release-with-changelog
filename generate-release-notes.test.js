@@ -1,8 +1,14 @@
+const {getOctokit, context} = require('@actions/github');
+const core = require('@actions/core');
+
 const stripIndent = require('strip-indent');
 const {generateReleaseNotes} = require('./generate-release-notes');
 
 const dedent = string => stripIndent(string).trim();
 const range = 'v3.0.0..v3.1.0';
+
+const {owner, repo} = context.repo;
+const octokit = getOctokit(core.getInput('token'));
 
 test('generates changelog using default options', async () => {
 	const output = await generateReleaseNotes({range});
@@ -152,6 +158,28 @@ test('generates changelog using reverse optios', async () => {
 		- 71ec95ec Meta: update self workflow (#16)
 		- 8d79eb1a Meta: Add tests using jest (#22)
 		- f9cec2b2 Add support for \`exclude: true\` (#23)
+
+		[\`v3.0.0..v3.1.0\`](https://github.com/fregante/release-with-changelog/compare/v3.0.0..v3.1.0)
+	`));
+});
+
+test('generates changelog using author replacement', async () => {
+	const output = await generateReleaseNotes({
+		octokit,
+		owner,
+		repo,
+		range,
+		commitTemplate: '- {author} > {title}'
+	});
+
+	expect(output).toEqual(dedent(`
+		- @fregante > Add support for \`exclude: true\` (#23)
+		- @notlmn > Meta: Add tests using jest (#22)
+		- @fregante > Meta: update self workflow (#16)
+		- @fregante > Meta: Document how to add changelogs to old tags (#15)
+		- @dependabot[bot] > Bump @actions/core from 1.2.4 to 1.2.6 (#19)
+		- @fregante > Readme: make first example bare-bones (#18)
+		- @notlmn > Meta: Update readme example to v3
 
 		[\`v3.0.0..v3.1.0\`](https://github.com/fregante/release-with-changelog/compare/v3.0.0..v3.1.0)
 	`));

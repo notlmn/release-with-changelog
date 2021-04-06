@@ -279,7 +279,10 @@ async function run() {
 			owner,
 			name: releaseTitle.replace('{tag}', pushedTag),
 			tag_name: pushedTag, // eslint-disable-line camelcase
-			body: await generateReleaseNotes({range, exclude, commitTemplate, releaseTemplate, dateFormat, reverseSort}),
+			body: await generateReleaseNotes({
+				octokit, owner, repo, range, exclude,
+				commitTemplate, releaseTemplate, dateFormat, reverseSort
+			}),
 			draft: isDraft,
 			prerelease: isPrerelease
 		});
@@ -872,6 +875,9 @@ const repoURL = process.env.GITHUB_SERVER_URL + '/' + process.env.GITHUB_REPOSIT
 const excludePreset = /^bump |^meta|^document|^lint|^refactor|readme|dependencies|^v?\d+\.\d+\.\d+/i;
 
 async function generateReleaseNotes({
+	octokit,
+	owner,
+	repo,
 	range,
 	exclude = '',
 	commitTemplate = '- {hash} {title}',
@@ -908,10 +914,17 @@ async function generateReleaseNotes({
 		commitEntries.push('_Maintenance release_');
 	} else {
 		for (const {hash, date, title} of commits) {
+			const {data} = await octokit.repos.getCommit({
+				owner,
+				repo,
+				ref: hash
+			});
+			const author = '@' + data.author.login;
 			const line = commitTemplate
 				.replace('{hash}', hash)
 				.replace('{url}', repoURL + '/commit/' + hash)
 				.replace('{date}', date)
+				.replace('{author}', author)
 				.replace('{title}', title);
 			commitEntries.push(line);
 		}

@@ -83,6 +83,7 @@ Markdown template for each commit entry in release notes. Available replacements
 - `{hash}` Abbreviated commit hash, gets linkified automatically in release notes.
 - `{url}` Plain link to commit on GitHub.
 - `{date}` Date of commit, could be specified in [`date-format`](#date-format).
+- `{author}` Author of commit, gets linkified to GitHub username automatically in release notes.
 
 ### exclude
 
